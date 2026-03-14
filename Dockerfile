@@ -17,9 +17,10 @@ RUN pip install --no-cache-dir \
     bitarray sacrebleu
 
 # Install app dependencies
+RUN pip install --no-cache-dir "numpy==1.26.4"
 RUN pip install --no-cache-dir \
     fastapi uvicorn[standard] anthropic python-multipart aiofiles \
-    kokoro-onnx soundfile librosa scipy numpy \
+    kokoro-onnx soundfile librosa scipy \
     "faiss-cpu==1.7.4" huggingface_hub
 
 # Install infer-rvc-python without deps (deps already installed)
