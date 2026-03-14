@@ -9,6 +9,37 @@ import uvicorn
 
 from contextlib import asynccontextmanager
 
+def download_models():
+    """Download model files from HF Hub if not present."""
+    from huggingface_hub import hf_hub_download
+    MODEL_REPO = "ejzhu2026/elon-voice-bot-models"
+    BASE = Path(__file__).parent
+
+    files = [
+        ("kokoro-v1.0.onnx",           BASE / "assets" / "kokoro-v1.0.onnx"),
+        ("voices-v1.0.bin",            BASE / "assets" / "voices-v1.0.bin"),
+        ("rvc_model/Elonmusk.pth",     BASE / "assets" / "rvc_model" / "Elonmusk (1).pth"),
+        ("rvc_model/elon_flat.index",  BASE / "assets" / "rvc_model" / "elon_flat.index"),
+        ("hubert_base.pt",             BASE / "hubert_base.pt"),
+        ("reference/elon_ref.wav",     BASE / "assets" / "reference" / "elon_ref.wav"),
+    ]
+    for repo_path, local_path in files:
+        if not local_path.exists():
+            print(f"[DL] Downloading {repo_path}...")
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            hf_hub_download(
+                repo_id=MODEL_REPO, filename=repo_path,
+                local_dir=str(BASE), local_dir_use_symlinks=False,
+            )
+            # hf_hub_download saves to local_dir/filename, move to expected path
+            downloaded = BASE / repo_path
+            if downloaded.exists() and downloaded != local_path:
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                downloaded.rename(local_path)
+            print(f"[DL]   -> {local_path}")
+        else:
+            print(f"[DL] {local_path.name} already exists, skipping.")
+
 @asynccontextmanager
 async def lifespan(app):
     # Models are pre-loaded synchronously at import time (see bottom of file)
@@ -283,9 +314,17 @@ if __name__ == "__main__":
     if not key:
         print("Error: set ANTHROPIC_API_KEY environment variable")
         sys.exit(1)
+    # Download models from HF Hub if missing
+    download_models()
+    # Reload ref audio path after potential download
+    global ref_audio_path, ref_text_content
+    _ref = BASE_DIR / "assets" / "reference" / "elon_ref.wav"
+    if _ref.exists() and not ref_audio_path:
+        ref_audio_path = str(_ref)
+        ref_text_content = _default_ref_text
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl
-    if ref_audio_path:
-        pl.warmup()
-    print("Starting Elon Voice Bot at http://localhost:8001")
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    pl.warmup()
+    port = int(os.environ.get("PORT", 7860))
+    print(f"Starting Elon Voice Bot at http://0.0.0.0:{port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
