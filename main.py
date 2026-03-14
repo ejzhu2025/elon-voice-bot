@@ -233,8 +233,8 @@ _default_ref_text = (
     "Well, if one looks to say chimpanzee society, it is not friendly. "
     "I mean, the bonobos are an exception. But chimpanzee society is full of violence."
 )
-ref_audio_path: str = _default_ref if (REF_DIR / "elon_ref.wav").exists() else ""
-ref_text_content: str = _default_ref_text if (REF_DIR / "elon_ref.wav").exists() else ""
+ref_audio_path = _default_ref if (REF_DIR / "elon_ref.wav").exists() else ""
+ref_text_content = _default_ref_text if (REF_DIR / "elon_ref.wav").exists() else ""
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -317,7 +317,6 @@ if __name__ == "__main__":
     # Download models from HF Hub if missing
     download_models()
     # Reload ref audio path after potential download
-    global ref_audio_path, ref_text_content
     _ref = BASE_DIR / "assets" / "reference" / "elon_ref.wav"
     if _ref.exists() and not ref_audio_path:
         ref_audio_path = str(_ref)
