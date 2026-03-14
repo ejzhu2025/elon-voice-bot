@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir \
 
 # Install infer-rvc-python without deps (deps already installed)
 RUN pip install --no-cache-dir infer-rvc-python --no-deps
+RUN pip install --no-cache-dir ffmpeg-python
 
 # Pin pydantic to avoid by_alias=None bug
 RUN pip install --no-cache-dir "pydantic==2.9.2" "pydantic-core==2.23.4"
