@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+anthropic
+python-multipart
+aiofiles
+kokoro-onnx
+infer-rvc-python
+soundfile
+librosa
+scipy
+numpy
+faiss-cpu

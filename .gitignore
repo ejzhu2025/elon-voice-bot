@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Large model files (store on Hugging Face)
+assets/kokoro-v1.0.onnx
+assets/kokoro-v0_19.onnx
+assets/voices-v1.0.bin
+assets/rvc_model/
+hubert_base.pt
+rmvpe.pt
+
+# Output audio
+assets/output/
+
+# Reference audio (user-provided)
+assets/reference/
