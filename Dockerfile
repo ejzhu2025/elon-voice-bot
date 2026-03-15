@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir \
     fastapi uvicorn[standard] anthropic python-multipart aiofiles \
     kokoro-onnx soundfile librosa scipy \
     "faiss-cpu==1.7.4" huggingface_hub ffmpeg-python \
-    sentence-transformers beautifulsoup4 requests pypdf
+    "sentence-transformers==2.7.0" "transformers==4.40.2" beautifulsoup4 requests pypdf
 
 # Pre-download sentence-transformers model into image
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2'); print('ST model cached')"
