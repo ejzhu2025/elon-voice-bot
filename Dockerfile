@@ -17,18 +17,19 @@ RUN pip install --no-cache-dir \
     bitarray sacrebleu
 
 # Install app dependencies
-RUN pip install --no-cache-dir "numpy==1.26.4"
 RUN pip install --no-cache-dir \
     fastapi uvicorn[standard] anthropic python-multipart aiofiles \
     kokoro-onnx soundfile librosa scipy \
-    "faiss-cpu==1.7.4" huggingface_hub
+    "faiss-cpu==1.7.4" huggingface_hub ffmpeg-python
 
 # Install infer-rvc-python without deps (deps already installed)
 RUN pip install --no-cache-dir infer-rvc-python --no-deps
-RUN pip install --no-cache-dir ffmpeg-python
 
 # Pin pydantic to avoid by_alias=None bug
 RUN pip install --no-cache-dir "pydantic==2.9.2" "pydantic-core==2.23.4"
+
+# Pin numpy LAST to prevent any package from upgrading it to 2.x (breaks faiss)
+RUN pip install --no-cache-dir "numpy==1.26.4"
 
 # Patch fairseq: weights_only=False
 RUN python -c "\
