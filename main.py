@@ -16,12 +16,14 @@ def download_models():
     BASE = Path(__file__).parent
 
     files = [
-        ("kokoro-v1.0.onnx",           BASE / "assets" / "kokoro-v1.0.onnx"),
-        ("voices-v1.0.bin",            BASE / "assets" / "voices-v1.0.bin"),
-        ("rvc_model/Elonmusk.pth",     BASE / "assets" / "rvc_model" / "Elonmusk (1).pth"),
-        ("rvc_model/elon_flat.index",  BASE / "assets" / "rvc_model" / "elon_flat.index"),
-        ("hubert_base.pt",             BASE / "hubert_base.pt"),
-        ("reference/elon_ref.wav",     BASE / "assets" / "reference" / "elon_ref.wav"),
+        ("kokoro-v1.0.onnx",                        BASE / "assets" / "kokoro-v1.0.onnx"),
+        ("voices-v1.0.bin",                         BASE / "assets" / "voices-v1.0.bin"),
+        ("rvc_model/Elonmusk.pth",                  BASE / "assets" / "rvc_model" / "Elonmusk (1).pth"),
+        ("rvc_model/elon_flat.index",               BASE / "assets" / "rvc_model" / "elon_flat.index"),
+        ("hubert_base.pt",                          BASE / "hubert_base.pt"),
+        ("reference/elon_ref.wav",                  BASE / "assets" / "reference" / "elon_ref.wav"),
+        ("books/Ashlee_Vance_Elon_Musk.pdf",        BASE / "assets" / "rag" / "docs" / "Ashlee_Vance_Elon_Musk.pdf"),
+        ("books/Isaacson_Elon_Musk_2023.pdf",       BASE / "assets" / "rag" / "docs" / "Isaacson_Elon_Musk_2023.pdf"),
     ]
     for repo_path, local_path in files:
         if not local_path.exists():
@@ -335,9 +337,11 @@ if __name__ == "__main__":
     if _ref.exists() and not ref_audio_path:
         ref_audio_path = str(_ref)
         ref_text_content = _default_ref_text
-    # Initialize RAG knowledge base
+    # Initialize RAG knowledge base (pass books if downloaded)
     import rag as rag_mod
-    rag_mod.init()
+    _books_dir = BASE_DIR / "assets" / "rag" / "docs"
+    _books = [str(p) for p in _books_dir.glob("*.pdf")] if _books_dir.exists() else []
+    rag_mod.init(extra_files=_books if _books else None)
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl
     pl.warmup()
