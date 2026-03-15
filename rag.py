@@ -125,7 +125,7 @@ def init(extra_files: list[str] = None):
         index_path  = RAG_DIR / "rag.index"
         chunks_path = RAG_DIR / "rag_chunks.pkl"
 
-        if index_path.exists() and chunks_path.exists() and not extra_files:
+        if index_path.exists() and chunks_path.exists():
             _load_saved()
             _rag_ready = True
             return
