@@ -25,16 +25,13 @@ def download_models():
         ("books/Ashlee_Vance_Elon_Musk.pdf",        BASE / "assets" / "rag" / "docs" / "Ashlee_Vance_Elon_Musk.pdf"),
         ("books/Isaacson_Elon_Musk_2023.pdf",       BASE / "assets" / "rag" / "docs" / "Isaacson_Elon_Musk_2023.pdf"),
     ]
+    import shutil
     for repo_path, local_path in files:
         if not local_path.exists():
             print(f"[DL] Downloading {repo_path}...")
             local_path.parent.mkdir(parents=True, exist_ok=True)
-            hf_hub_download(
-                repo_id=MODEL_REPO,
-                filename=repo_path,
-                local_dir=str(local_path.parent),
-                local_dir_use_symlinks=False,
-            )
+            cached = hf_hub_download(repo_id=MODEL_REPO, filename=repo_path)
+            shutil.copy(cached, str(local_path))
             print(f"[DL]   -> {local_path}")
         else:
             print(f"[DL] {local_path.name} already exists, skipping.")
@@ -337,7 +334,7 @@ if __name__ == "__main__":
     # Initialize RAG knowledge base (pass books if downloaded)
     import rag as rag_mod
     _books_dir = BASE_DIR / "assets" / "rag" / "docs"
-    _books = [str(p) for p in _books_dir.glob("*.pdf")] if _books_dir.exists() else []
+    _books = [str(p) for p in _books_dir.glob("**/*.pdf")] if _books_dir.exists() else []
     rag_mod.init(extra_files=_books if _books else None)
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl
