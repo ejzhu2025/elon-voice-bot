@@ -30,14 +30,11 @@ def download_models():
             print(f"[DL] Downloading {repo_path}...")
             local_path.parent.mkdir(parents=True, exist_ok=True)
             hf_hub_download(
-                repo_id=MODEL_REPO, filename=repo_path,
-                local_dir=str(BASE), local_dir_use_symlinks=False,
+                repo_id=MODEL_REPO,
+                filename=repo_path,
+                local_dir=str(local_path.parent),
+                local_dir_use_symlinks=False,
             )
-            # hf_hub_download saves to local_dir/filename, move to expected path
-            downloaded = BASE / repo_path
-            if downloaded.exists() and downloaded != local_path:
-                local_path.parent.mkdir(parents=True, exist_ok=True)
-                downloaded.rename(local_path)
             print(f"[DL]   -> {local_path}")
         else:
             print(f"[DL] {local_path.name} already exists, skipping.")

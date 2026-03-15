@@ -62,7 +62,7 @@ c = open(f).read().replace( \
     'torch.load(model_path, map_location=\"cpu\", weights_only=False)'); \
 open(f,'w').write(c); print('rmvpe patched')"
 
-COPY main.py pipeline.py ./
+COPY main.py pipeline.py rag.py ./
 
 EXPOSE 7860
 
