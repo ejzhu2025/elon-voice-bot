@@ -67,11 +67,28 @@ def inject_fillers(text: str) -> str:
 
 def get_elon_response(question: str, history: list) -> str:
     client = anthropic.Anthropic()
+
+    # RAG: retrieve relevant context
+    system = SYSTEM_PROMPT
+    try:
+        import rag
+        passages = rag.query(question, k=3)
+        if passages:
+            context = "\n\n---\n".join(passages)
+            system += (
+                "\n\nRELEVANT CONTEXT FROM ELON'S INTERVIEWS & BIOGRAPHY:\n"
+                + context
+                + "\n\nIf this context is relevant to the question, draw on it naturally. "
+                  "Still reply in Elon's short, direct Twitter style (1-15 words)."
+            )
+    except Exception:
+        pass
+
     messages = history + [{"role": "user", "content": question}]
     r = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=80,
-        system=SYSTEM_PROMPT,
+        max_tokens=150,
+        system=system,
         messages=messages,
     )
     return r.content[0].text.strip()

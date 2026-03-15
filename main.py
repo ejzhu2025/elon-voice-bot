@@ -252,6 +252,20 @@ async def upload_ref(file: UploadFile = File(...)):
     ref_audio_path = str(dest)
     return {"ok": True, "path": str(dest)}
 
+@app.post("/upload_doc")
+async def upload_doc(file: UploadFile = File(...)):
+    """Upload a PDF or TXT document to add to the RAG knowledge base."""
+    ext = Path(file.filename).suffix.lower()
+    if ext not in (".pdf", ".txt"):
+        raise HTTPException(400, "Only PDF or TXT files supported")
+    dest = BASE_DIR / "assets" / "rag" / "docs" / file.filename
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    async with aiofiles.open(dest, "wb") as f:
+        await f.write(await file.read())
+    import rag as rag_mod
+    await asyncio.get_event_loop().run_in_executor(None, lambda: rag_mod.add_document(str(dest)))
+    return {"ok": True, "message": f"Added {file.filename} to knowledge base"}
+
 @app.post("/set_ref_text")
 async def set_ref_text(payload: dict):
     global ref_text_content
@@ -321,6 +335,9 @@ if __name__ == "__main__":
     if _ref.exists() and not ref_audio_path:
         ref_audio_path = str(_ref)
         ref_text_content = _default_ref_text
+    # Initialize RAG knowledge base
+    import rag as rag_mod
+    rag_mod.init()
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl
     pl.warmup()
