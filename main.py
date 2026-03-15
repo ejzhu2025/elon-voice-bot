@@ -24,6 +24,8 @@ def download_models():
         ("reference/elon_ref.wav",                  BASE / "assets" / "reference" / "elon_ref.wav"),
         ("books/Ashlee_Vance_Elon_Musk.pdf",        BASE / "assets" / "rag" / "docs" / "Ashlee_Vance_Elon_Musk.pdf"),
         ("books/Isaacson_Elon_Musk_2023.pdf",       BASE / "assets" / "rag" / "docs" / "Isaacson_Elon_Musk_2023.pdf"),
+        ("rag/rag.index",                           BASE / "assets" / "rag" / "rag.index"),
+        ("rag/rag_chunks.pkl",                      BASE / "assets" / "rag" / "rag_chunks.pkl"),
     ]
     import shutil
     for repo_path, local_path in files:
@@ -334,8 +336,10 @@ if __name__ == "__main__":
     # Initialize RAG knowledge base (pass books if downloaded)
     import rag as rag_mod
     _books_dir = BASE_DIR / "assets" / "rag" / "docs"
+    # If pre-built index exists, init() will load it directly (no re-embedding)
     _books = [str(p) for p in _books_dir.glob("**/*.pdf")] if _books_dir.exists() else []
     rag_mod.init(extra_files=_books if _books else None)
+    print("[RAG] Ready.")
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl
     pl.warmup()
