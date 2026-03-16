@@ -1,60 +1,70 @@
-# I Built a Chatbot That Talks Back in Elon Musk's Voice
+# Ask Anything to Elon Musk
 
-*Type a question. Get a response — written like Elon, spoken like Elon.*
-
----
-
-## What Is This?
-
-**Elon Voice Bot** is an AI chatbot that answers your questions the way Elon Musk would — in his own voice.
-
-You type: *"What do you think about AI?"*
-
-You get back: a short, punchy Elon-style reply, read aloud in a voice that actually sounds like him.
-
-[🎙 Try it live on Hugging Face →](https://huggingface.co/spaces/ejzhu2026/elon-voice-bot)
+*He doesn't have time to answer your questions. Now he does.*
 
 ---
 
-## Why I Built This
+## The Idea
 
-I've always been fascinated by voice cloning — the idea that a machine can learn to *sound* like a specific person. Elon Musk has one of the most recognizable voices and communication styles in the world: blunt, direct, occasionally hilarious.
+Elon Musk runs Tesla, SpaceX, X, and a handful of other companies simultaneously. He's one of the most insightful people alive — and one of the least available.
 
-So I asked myself: what if you could have a conversation with him?
+Millions of people have questions they'd love to ask him. Almost none of them ever will.
 
-Not a generic chatbot. A full voice experience — where the *words* sound like him and the *voice* sounds like him.
+So I built the next best thing.
+
+**Ask Anything to Elon Musk** lets you have a real conversation with a version of Elon powered by his own wisdom — drawn from his biographies, interviews, and public talks. Not a generic AI pretending to be him. A system that has actually *read* what he said, *learned* how he thinks, and *speaks* in his voice.
+
+His time is limited. His knowledge isn't.
+
+[🎙 Try it live →](https://huggingface.co/spaces/ejzhu2026/elon-voice-bot)
+
+[🎙 Try it live →](https://huggingface.co/spaces/ejzhu2026/elon-voice-bot)
+
+---
+
+## This Is More Than Voice Cloning
+
+Most voice projects stop at making someone *sound* like a person. This one goes deeper.
+
+The bot doesn't just speak in Elon's voice — it **knows what Elon knows**.
+
+It has read:
+- Walter Isaacson's biography *Elon Musk* (2023)
+- Ashlee Vance's biography *Elon Musk: Tesla, SpaceX, and the Quest for a Fantastic Future*
+- Full transcripts from his Lex Fridman interviews
+- His TED talks
+
+Ask about his childhood in South Africa, getting bullied at school, founding Zip2, or why he thinks humanity needs to be multiplanetary — and the answers come from real sources, not hallucination.
+
+Ask for his opinion on AI, politics, or the future — and you get the blunt, punchy Elon style most people recognize.
+
+This is the difference between a voice clone and a **digital presence**.
 
 ---
 
 ## How It Works
 
-The pipeline has three steps:
+### Step 1 — His Mind (RAG + Claude AI)
+When you ask a question, the system first checks if it's biographical or factual. If so, it retrieves the most relevant passages from the knowledge base (built from his biographies and interviews) and feeds them into the prompt.
 
-### 1. Generate the Response (Claude AI)
-I use Claude (Anthropic's AI) with a carefully tuned system prompt that captures Elon's communication style:
-- Short, punchy replies (most answers are under 15 words)
-- Dry humor and contrarian takes
-- Zero corporate speak
-- Single-word replies when warranted: *"Exactly." / "Insane." / "Yeah!"*
+Then Claude generates a response in Elon's communication style:
+- Short and direct (most replies are under 15 words)
+- Dry humor, contrarian takes, zero corporate speak
+- Single-word answers when that's all it takes: *"Exactly." / "Insane." / "Yeah!"*
 
-For factual questions about Elon's life, the bot pulls from a **knowledge base** built from real sources — two biographies (Walter Isaacson's *Elon Musk* and Ashlee Vance's biography) plus transcripts from Lex Fridman interviews and TED talks. This way, when you ask about his childhood or early companies, the answers are grounded in real facts.
+### Step 2 — His Voice (Kokoro TTS → RVC)
+The text is first converted to natural speech using **Kokoro**, an open-source TTS model. Then that audio is passed through **RVC (Retrieval-based Voice Conversion)** — a model trained specifically on Elon's voice — which transforms it into something that genuinely sounds like him speaking.
 
-### 2. Text-to-Speech (Kokoro TTS)
-The text gets converted to audio using **Kokoro**, a high-quality open-source TTS model. It produces natural-sounding speech as the base voice.
-
-### 3. Voice Conversion (RVC)
-Here's the magic: the Kokoro audio gets passed through **RVC (Retrieval-based Voice Conversion)** — a model trained on Elon Musk's actual voice. It transforms the generic TTS audio into something that genuinely sounds like Elon speaking.
-
-The result: natural-sounding audio in Elon's voice, generated in seconds.
+Two models working in sequence: one gives the words life, the other gives them *his* voice.
 
 ---
 
 ## The Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Language Model | Claude (claude-sonnet-4-6) |
-| Knowledge Base | FAISS + sentence-transformers RAG |
+| Layer | Technology |
+|-------|-----------|
+| Knowledge & Reasoning | Claude (claude-sonnet-4-6) + RAG |
+| Knowledge Base | FAISS + sentence-transformers + biographies + interviews |
 | Text-to-Speech | Kokoro ONNX |
 | Voice Conversion | RVC V2 (Elon Musk model) |
 | Backend | FastAPI |
@@ -62,29 +72,27 @@ The result: natural-sounding audio in Elon's voice, generated in seconds.
 
 ---
 
-## Challenges I Ran Into
+## Hard Problems I Solved
 
-**Getting the voice right.** Voice cloning is surprisingly hard to get *just right*. Too much processing and it sounds robotic. Too little and it doesn't sound like Elon at all. I tuned the index rate and pitch parameters extensively to find the sweet spot.
+**Keeping answers grounded in reality.** The system distinguishes between factual questions (where it retrieves from real sources) and opinion questions (where it reasons in Elon's style). This prevents hallucination without slowing down casual conversations.
 
-**Making it fast.** My first version took 90 seconds to respond. Through a combination of GPU acceleration (T4), smart caching, and skipping unnecessary AI lookups for casual questions, I got it down to under 10 seconds end-to-end.
+**Making it fast enough to feel like a conversation.** The first version took 90 seconds end-to-end. GPU acceleration, smart model caching, and selective RAG retrieval brought it under 10 seconds.
 
-**Making Elon sound like Elon in text.** Claude is naturally verbose and polite. Getting it to respond with Elon's characteristic bluntness — including one-word replies and meme-style takes — required careful prompt engineering and a lot of iteration.
+**Getting the voice *just right*.** Too much voice conversion and it sounds robotic. Too little and it could be anyone. Tuning the RVC parameters took many iterations to land on something that feels natural.
 
-**Acronyms breaking TTS.** When Elon says "AI", he says "A-I", not "eye". When he mentions "DOGE", it should sound like "doge", not "D-O-G-E". I built a text normalization layer that expands 50+ abbreviations and acronyms before sending text to the TTS engine.
+**Acronyms breaking TTS.** Elon says "A-I", not "eye". "DOGE" should sound like "doge", not spelled out. I built a normalization layer that handles 50+ abbreviations and acronyms before they hit the TTS engine.
 
 ---
 
 ## What's Next
 
-- 🎤 Voice input — ask questions by speaking instead of typing
-- 🌐 More knowledge sources (more interviews, tweets)
-- ⚡ Faster response time with streaming audio
+- 🎤 Voice input — ask by speaking, not typing
+- 💬 More sources — tweets, earnings calls, more interviews
+- ⚡ Streaming audio — hear the response while it's still generating
 
 ---
 
 ## Try It
-
-The bot is live and free to use:
 
 👉 **[huggingface.co/spaces/ejzhu2026/elon-voice-bot](https://huggingface.co/spaces/ejzhu2026/elon-voice-bot)**
 
