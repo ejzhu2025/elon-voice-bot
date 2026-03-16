@@ -67,24 +67,46 @@ def inject_fillers(text: str) -> str:
 
 # ── Claude response ───────────────────────────────────────────────────────────
 
+_BIOGRAPHICAL_KEYWORDS = {
+    # personal history
+    "childhood", "child", "born", "birth", "grew up", "grow up", "young",
+    "school", "bully", "bullied", "beat", "father", "mother", "dad", "mom",
+    "maye", "errol", "kimbal", "sibling", "brother", "sister", "family",
+    "south africa", "pretoria", "canada", "university", "college", "wharton",
+    "stanford", "education", "study", "book", "read", "early life",
+    # company history
+    "zip2", "x.com", "paypal", "founded", "started tesla", "started spacex",
+    "boring company", "neuralink", "first job", "first company",
+    # biographical queries
+    "biography", "past", "history", "memory", "remember", "experience",
+    "how did you", "what happened", "when did you", "where did you",
+    "why did you leave", "how did it start",
+}
+
+def _needs_rag(question: str) -> bool:
+    """Only use RAG for factual/biographical questions, not casual opinions."""
+    q = question.lower()
+    return any(kw in q for kw in _BIOGRAPHICAL_KEYWORDS)
+
 def get_elon_response(question: str, history: list) -> str:
     client = anthropic.Anthropic()
 
-    # RAG: retrieve relevant context
+    # RAG: only retrieve for biographical/factual questions
     system = SYSTEM_PROMPT
-    try:
-        import rag
-        passages = rag.query(question, k=3)
-        if passages:
-            context = "\n\n---\n".join(passages)
-            system += (
-                "\n\nRELEVANT CONTEXT FROM ELON'S INTERVIEWS & BIOGRAPHY:\n"
-                + context
-                + "\n\nIf this context is relevant to the question, draw on it naturally. "
-                  "Still reply in Elon's short, direct Twitter style (1-15 words)."
-            )
-    except Exception:
-        pass
+    if _needs_rag(question):
+        try:
+            import rag
+            passages = rag.query(question, k=3)
+            if passages:
+                context = "\n\n---\n".join(passages)
+                system += (
+                    "\n\nRELEVANT CONTEXT FROM ELON'S INTERVIEWS & BIOGRAPHY:\n"
+                    + context
+                    + "\n\nDraw on this context naturally. "
+                      "Still reply in Elon's direct style."
+                )
+        except Exception:
+            pass
 
     messages = history + [{"role": "user", "content": question}]
     r = client.messages.create(

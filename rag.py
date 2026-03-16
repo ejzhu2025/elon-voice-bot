@@ -33,9 +33,9 @@ SOURCES = [
     ("https://sameerbajaj.com/musk/",                           "isaacson_notes"),
 ]
 
-CHUNK_SIZE    = 350   # words
-CHUNK_OVERLAP = 50    # words
-SIM_THRESHOLD = 0.25
+CHUNK_SIZE    = 150   # words
+CHUNK_OVERLAP = 30    # words
+SIM_THRESHOLD = 0.35  # higher threshold = only genuinely relevant passages
 
 # ── Text helpers ──────────────────────────────────────────────────────────────
 
