@@ -181,7 +181,7 @@ def warmup(ref_audio: str = "", ref_text: str = ""):
     pitchf_t = torch.tensor(pitchf[:p_len], device="cpu").unsqueeze(0).float()
     sid = torch.tensor(0, device="cpu").unsqueeze(0).long()
     pipe.vc(hu_bert, net_g, sid, audio_pad, pitch_t, pitchf_t,
-            [0,0,0], index, big_npy, 0.0, version, 0.33)
+            [0,0,0], index, big_npy, 0.75, version, 0.33)
     print("[TTS] Warm-up complete.")
 
 
@@ -213,7 +213,7 @@ def synthesize(text: str, ref_audio: str, ref_text: str, output_dir: Path) -> Pa
 
     t1 = time.perf_counter()
     audio_opt = pipe.vc(hu_bert, net_g, sid, audio_pad, pitch_t, pitchf_t,
-                        [0,0,0], index, big_npy, 0.0, version, 0.33)
+                        [0,0,0], index, big_npy, 0.75, version, 0.33)
     print(f"[TIME] RVC vc():        {time.perf_counter()-t1:.2f}s")
     print(f"[TIME] RVC total:       {time.perf_counter()-t0:.2f}s")
     result = audio_opt[pipe.t_pad_tgt:-pipe.t_pad_tgt]
