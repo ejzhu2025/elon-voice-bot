@@ -339,6 +339,7 @@ if __name__ == "__main__":
     # If pre-built index exists, init() will load it directly (no re-embedding)
     _books = [str(p) for p in _books_dir.glob("**/*.pdf")] if _books_dir.exists() else []
     rag_mod.init(extra_files=_books if _books else None)
+    rag_mod.query("warmup", k=1)   # pre-load sentence-transformers embedder
     print("[RAG] Ready.")
     # Pre-load TTS models before uvicorn starts
     import pipeline as pl

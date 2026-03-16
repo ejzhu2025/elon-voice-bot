@@ -87,7 +87,7 @@ def get_elon_response(question: str, history: list) -> str:
     messages = history + [{"role": "user", "content": question}]
     r = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=150,
+        max_tokens=80,
         system=system,
         messages=messages,
     )
