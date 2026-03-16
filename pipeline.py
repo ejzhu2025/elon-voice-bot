@@ -126,9 +126,18 @@ def _load_models():
         str(BASE_DIR / "assets" / "kokoro-v1.0.onnx"),
         str(BASE_DIR / "assets" / "voices-v1.0.bin"),
     )
+    # Use CUDA for Kokoro ONNX if available
+    if torch.cuda.is_available():
+        try:
+            _kokoro.sess.set_providers(["CUDAExecutionProvider", "CPUExecutionProvider"])
+            print("[TTS] Kokoro using CUDA")
+        except Exception as e:
+            print(f"[TTS] Kokoro CUDA failed, using CPU: {e}")
 
     print("[TTS] Loading RVC model...")
-    _rvc_config = Config(only_cpu=True)
+    use_cpu = not torch.cuda.is_available()
+    print(f"[TTS] CUDA available: {not use_cpu}")
+    _rvc_config = Config(only_cpu=use_cpu)
     _rvc_net_g, _rvc_pipe, _rvc_cpt, _rvc_version, _rvc_tgt_sr = _load_rvc()
 
     print("[TTS] Loading HuBERT...")
@@ -177,9 +186,10 @@ def warmup(ref_audio: str = "", ref_text: str = ""):
     audio_pad = np.pad(audio, (pipe.t_pad, pipe.t_pad), mode="reflect")
     p_len = audio_pad.shape[0] // pipe.window
     pitch, pitchf = pipe.get_f0("", audio_pad, p_len, 0, "pm", 3, None)
-    pitch_t = torch.tensor(pitch[:p_len], device="cpu").unsqueeze(0).long()
-    pitchf_t = torch.tensor(pitchf[:p_len], device="cpu").unsqueeze(0).float()
-    sid = torch.tensor(0, device="cpu").unsqueeze(0).long()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pitch_t = torch.tensor(pitch[:p_len], device=device).unsqueeze(0).long()
+    pitchf_t = torch.tensor(pitchf[:p_len], device=device).unsqueeze(0).float()
+    sid = torch.tensor(0, device=device).unsqueeze(0).long()
     pipe.vc(hu_bert, net_g, sid, audio_pad, pitch_t, pitchf_t,
             [0,0,0], index, big_npy, 0.75, version, 0.33)
     print("[TTS] Warm-up complete.")
@@ -207,9 +217,10 @@ def synthesize(text: str, ref_audio: str, ref_text: str, output_dir: Path) -> Pa
     t1 = time.perf_counter()
     pitch, pitchf = pipe.get_f0("", audio_pad, p_len, 0, "pm", 3, None)
     print(f"[TIME] RVC get_f0:      {time.perf_counter()-t1:.2f}s")
-    pitch_t = torch.tensor(pitch[:p_len], device="cpu").unsqueeze(0).long()
-    pitchf_t = torch.tensor(pitchf[:p_len], device="cpu").unsqueeze(0).float()
-    sid = torch.tensor(0, device="cpu").unsqueeze(0).long()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pitch_t = torch.tensor(pitch[:p_len], device=device).unsqueeze(0).long()
+    pitchf_t = torch.tensor(pitchf[:p_len], device=device).unsqueeze(0).float()
+    sid = torch.tensor(0, device=device).unsqueeze(0).long()
 
     t1 = time.perf_counter()
     audio_opt = pipe.vc(hu_bert, net_g, sid, audio_pad, pitch_t, pitchf_t,

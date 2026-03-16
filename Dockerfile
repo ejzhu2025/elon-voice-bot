@@ -7,9 +7,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install CPU-only torch first (smaller image)
+# Install torch with CUDA 12.1 support (T4 GPU)
 RUN pip install --no-cache-dir \
-    torch==2.2.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+    torch==2.2.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121
 
 # Install fairseq fork (Python 3.11 compatible)
 RUN pip install --no-cache-dir \
