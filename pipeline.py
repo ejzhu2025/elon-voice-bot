@@ -196,37 +196,29 @@ def warmup(ref_audio: str = "", ref_text: str = ""):
 
 
 def synthesize(text: str, ref_audio: str, ref_text: str, output_dir: Path) -> Path:
-    import torch, soundfile as sf, librosa, time
+    import torch, soundfile as sf, librosa
     from infer_rvc_python.root_pipe import bh, ah
 
     kokoro, _, net_g, pipe, cpt, version, tgt_sr, hu_bert, index, big_npy = get_models()
 
     # Step 1: Kokoro TTS
-    t0 = time.perf_counter()
     samples, sr = kokoro.create(text, voice="am_adam", speed=1.05, lang="en-us")
-    print(f"[TIME] Kokoro TTS:      {time.perf_counter()-t0:.2f}s")
 
     # Step 2: RVC voice conversion
-    t0 = time.perf_counter()
     audio = librosa.resample(samples.astype(np.float32), orig_sr=sr, target_sr=16000)
     audio_max = np.abs(audio).max() / 0.95
     if audio_max > 1: audio /= audio_max
     audio = signal.filtfilt(bh, ah, audio)
     audio_pad = np.pad(audio, (pipe.t_pad, pipe.t_pad), mode="reflect")
     p_len = audio_pad.shape[0] // pipe.window
-    t1 = time.perf_counter()
     pitch, pitchf = pipe.get_f0("", audio_pad, p_len, 0, "pm", 3, None)
-    print(f"[TIME] RVC get_f0:      {time.perf_counter()-t1:.2f}s")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     pitch_t = torch.tensor(pitch[:p_len], device=device).unsqueeze(0).long()
     pitchf_t = torch.tensor(pitchf[:p_len], device=device).unsqueeze(0).float()
     sid = torch.tensor(0, device=device).unsqueeze(0).long()
 
-    t1 = time.perf_counter()
     audio_opt = pipe.vc(hu_bert, net_g, sid, audio_pad, pitch_t, pitchf_t,
                         [0,0,0], index, big_npy, 0.75, version, 0.33)
-    print(f"[TIME] RVC vc():        {time.perf_counter()-t1:.2f}s")
-    print(f"[TIME] RVC total:       {time.perf_counter()-t0:.2f}s")
     result = audio_opt[pipe.t_pad_tgt:-pipe.t_pad_tgt]
 
     out_path = output_dir / f"{uuid.uuid4().hex}.wav"
@@ -237,13 +229,9 @@ def synthesize(text: str, ref_audio: str, ref_text: str, output_dir: Path) -> Pa
 
 def run(question: str, ref_audio: str, ref_text: str,
         output_dir: Path, history: list) -> dict:
-    import time
-    t0 = time.perf_counter()
     clean_text = get_elon_response(question, history)
-    print(f"[TIME] Claude API:      {time.perf_counter()-t0:.2f}s  -> '{clean_text[:60]}'")
     speech_text = inject_fillers(clean_text)
     audio_path = synthesize(speech_text, ref_audio, ref_text, output_dir)
-    print(f"[TIME] Total pipeline:  {time.perf_counter()-t0:.2f}s")
     return {
         "clean_text": clean_text,
         "speech_text": speech_text,
