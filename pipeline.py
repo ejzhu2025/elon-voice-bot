@@ -247,13 +247,80 @@ def synthesize(text: str, ref_audio: str, ref_text: str, output_dir: Path) -> Pa
     sf.write(str(out_path), result, tgt_sr)
     return out_path
 
+# ── TTS text normalization ────────────────────────────────────────────────────
+
+_ABBREVS = {
+    # casual / internet slang
+    r'\btbh\b':    'to be honest',
+    r'\bimo\b':    'in my opinion',
+    r'\bimho\b':   'in my humble opinion',
+    r'\bngl\b':    'not gonna lie',
+    r'\bidk\b':    'I don\'t know',
+    r'\bidc\b':    'I don\'t care',
+    r'\bbtw\b':    'by the way',
+    r'\bfyi\b':    'for your information',
+    r'\blol\b':    'ha',
+    r'\blmao\b':   'ha',
+    r'\bomg\b':    'oh my god',
+    r'\bwtf\b':    'what the heck',
+    r'\bwth\b':    'what the heck',
+    r'\bafaik\b':  'as far as I know',
+    r'\bafaict\b': 'as far as I can tell',
+    r'\bsmh\b':    'shaking my head',
+    r'\bfr\b':     'for real',
+    r'\bngl\b':    'not gonna lie',
+    r'\bgoat\b':   'greatest of all time',
+    r'\bfomo\b':   'fear of missing out',
+    r'\basap\b':   'as soon as possible',
+    r'\brn\b':     'right now',
+    r'\bw/\b':     'with',
+    r'\bw/o\b':    'without',
+    r'\bbc\b':     'because',
+    r'\bcuz\b':    'because',
+    r'\bgonna\b':  'going to',
+    r'\bwanna\b':  'want to',
+    r'\bgotta\b':  'got to',
+    r'\bkinda\b':  'kind of',
+    r'\bsorta\b':  'sort of',
+    r'\bdunno\b':  'don\'t know',
+    r'\byeah\b':   'yeah',
+    r'\bnope\b':   'nope',
+    r'\byep\b':    'yep',
+    # tech acronyms (spell out for TTS)
+    r'\bAI\b':     'A I',
+    r'\bAGI\b':    'A G I',
+    r'\bEV\b':     'E V',
+    r'\bEVs\b':    'E Vs',
+    r'\bUI\b':     'U I',
+    r'\bUX\b':     'U X',
+    r'\bAPI\b':    'A P I',
+    r'\bIPO\b':    'I P O',
+    r'\bVC\b':     'V C',
+    r'\bCEO\b':    'C E O',
+    r'\bCTO\b':    'C T O',
+    r'\bDOGE\b':   'doge',
+    r'\bBTC\b':    'bitcoin',
+    r'\bNFT\b':    'N F T',
+    r'\bUSA\b':    'the U S A',
+    r'\bUS\b':     'the U S',
+    r'\bNASA\b':   'NASA',
+    r'\bDOJ\b':    'D O J',
+    r'\bFDA\b':    'F D A',
+}
+
+def _normalize_for_tts(text: str) -> str:
+    for pattern, replacement in _ABBREVS.items():
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
 # ── Full pipeline ─────────────────────────────────────────────────────────────
 
 def run(question: str, ref_audio: str, ref_text: str,
         output_dir: Path, history: list) -> dict:
     clean_text = get_elon_response(question, history)
     speech_text = inject_fillers(clean_text)
-    audio_path = synthesize(speech_text, ref_audio, ref_text, output_dir)
+    tts_text = _normalize_for_tts(speech_text)
+    audio_path = synthesize(tts_text, ref_audio, ref_text, output_dir)
     return {
         "clean_text": clean_text,
         "speech_text": speech_text,
